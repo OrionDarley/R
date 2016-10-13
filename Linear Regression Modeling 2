@@ -104,3 +104,5 @@ summary(lm(crim ~ ptratio + I(ptratio^2) + I(ptratio^3), data = boston))
 summary(lm(crim ~ black + I(black^2) + I(black^3), data = boston))
 summary(lm(crim ~ lstat + I(lstat^2) + I(lstat^3), data = boston))
 summary(lm(crim ~ medv + I(medv^2) + I(medv^3), data = boston))
+
+# Fin
