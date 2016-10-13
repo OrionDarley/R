@@ -1,0 +1,133 @@
+
+# Orion Darley
+# Exercise 9 of Section 3.7 of ISLR
+# This exercise explores contemporary exploratory data analysis, model fitting and comparison. 
+
+# Load packages
+rm(list=ls())
+
+library(class)
+library(corrplot)
+library(dplyr)
+library(forecast)
+library(RCurl)
+library(ISLR)
+library(ggplot2)
+library(leaps)
+library(gridExtra)
+library(MASS)
+
+#############################################################################
+# Exercise 9 (ISLR Section 3.7)
+#############################################################################
+#This question involves the use of multiple linear regression on the Auto data set.
+
+data(Auto)
+head(Auto)
+auto = Auto
+str(auto)
+summary(auto)
+
+#(a) Produce a scatterplot matrix which includes all of the variables in the data set.
+
+pairs(auto, main = "Scatterplot Matrix of the Auto Dataset", col = "gray53")
+
+#The scatterplot matrix below includes all of the columns from the auto dataset [1:9]. 
+#There appears to be a few possible predictor variables in the matrix to include: cylinders, 
+#horsepower, weight, and displacement. However, an ANOVA will reveal whether these variables 
+#should or should not be included in one of several models.
+
+#(b) Compute the matrix of correlations between the variables using the function cor(). 
+#You will need to exclude the name variable, cor() which is qualitative.
+
+cor(auto[1:8])
+
+#According to the correlation matrix, there lies a high degree of correlation between several variables. 
+#The scatterplot matrix in exercise 9a display the individual and correlation scatter plots of variables 
+#in the correlation matrix. Variables that are of primary interest to predict mpg include: 
+#“displacement”, “horsepower”, and “weight”.
+
+#(c) Use the lm() function to perform a multiple linear regression 
+#with mpg as the response and all other variables except name as the predictors. 
+#Use the summary() function to print the results. Comment on the output. For instance:
+
+lm.fit = lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration
+              + year + origin, data = auto); summary(lm.fit); accuracy(lm.fit)
+
+leaps = regsubsets(mpg ~ cylinders + displacement + horsepower + weight + acceleration
++ year + origin, data = auto, nbest = 10); summary(leaps)
+plot(leaps, scale = "r2")
+
+#The beta coefficients for lm.fit make practical sense. For instance, decreasing the 
+#number of cylinders and horsepower in a vehicle should increase the mpg response variable. 
+#Higher horsepower and more cyclinders are usually reserved for cars that expect to burn 
+#fuel more rapidly, which decreases the mpg in a vehicle. The year variable has the highest 
+#t-value and its coefficient is pragmatic as well. Multicollinearity could exist in the 
+#first model, hence the telling t-values. The model fit adj-r2 ≈ 0.82, indicating the model has a very good fit. 
+#The mean square of the residuals (RSE / df) ≈ 0.009, which is very low.
+
+#i. Is there a relationship between the predictors and the response?
+#There is a positive relationship between the predictors and response variables. 
+#The F-statistic = 252.4 on 7 variables in 384 observations with p-value ≈ 0.0001. 
+#The null hypothesis is rejected and the alternate is accepted.
+
+#ii. Which predictors appear to have a statistically significant relationship to the response?
+Displacement, weight, year, and origin are all statistically significant at the 5% level.
+
+#iii. What does the coefficient for the year variable suggest?
+#Year has a positive effect on increasing mpg. For one unit increase of “year”, there is an 
+#increase in 0.75 unit increase in mpg. This is a logical generalization to make, as 
+#technological advances in vehicle performance increase over time.
+
+#(d) Use the plot() function to produce diagnostic plots of the linear regression fit. 
+#Comment on any problems you see with the fit. Do the residual plots suggest any unusually 
+#large outliers? Does the leverage plot identify any observations with unusually high leverage?
+
+par(mfcol = c(2, 2))
+plot(lm.fit, ask = F, col = "steelblue3")
+title(main = paste("", "\nPredicting MPG: MLR Model 1"), outer = TRUE, cex = 3)
+par(mfcol = c(1, 1))
+
+#The Residual Vs Fitted plot shows that the residuals might possibly have a 
+#non-linear pattern as the residuals are equally spread around the horizontal line, 
+#but contain a pattern at the beginning of the plot. For the most part the plot looks 
+#like the model is a linear model, however. Further analysis should be done.
+#The Scale-Location plot displays no trends, indicative of homoscedasticity.
+#The QQ-Plot indicates the data is normally distributed, but also contains a few outliers in the upper quantiles.
+#Not all outliers are influential, which the Residuals Vs Leverage (Cook’s Distance) plot describes. 
+#The plot shows that observation 14, 327, and 394 are significant outliers. 
+#These observations can be removed from the model to output increased prediction accuracy.
+
+#(e) Use the * and : symbols to fit linear regression models with interaction effects. 
+#Do any interactions appear to be statistically significant?
+
+lm.fit2 = lm(mpg ~ . +cylinders:weight -name , data = auto); summary(lm.fit2)
+accuracy(lm.fit2)
+
+lm.fit3 = lm(mpg ~ . +displacement:weight -name, data = auto); summary(lm.fit3)
+accuracy(lm.fit3)
+
+anova(lm.fit, lm.fit2, lm.fit3)
+
+#Variables that worked better together rather than independently, included 
+#cylinders : weight and displacement : weight. Both interaction variables are in separate models. 
+#The model with the second interaction term has lower RMSE and a better t-value for the 
+#variable than the first. Both variables are statistically significant at the 5% level.
+
+#(f) Try a few different transformations of the variables, such as log(X), ???X, X2. Comment on your findings.
+
+lm.fit4 = lm(mpg ~ . +log(cylinders) -name , data = auto); summary(lm.fit4)
+accuracy(lm.fit4)
+
+lm.fit5 = lm(mpg ~ . +sqrt(cylinders) -name , data = auto); summary(lm.fit5)
+accuracy(lm.fit5)
+
+lm.fit6 = lm(mpg ~ . +(cylinders)^2 -name , data = auto); summary(lm.fit6)
+accuracy(lm.fit6)
+
+#Taking the log or square root of the cylinders’ variable increased each model’s RMSE. 
+#The beta coefficients changed drastically (positive to negative) and the t-values returned negative. 
+#Both variables are statistically significant at the 5% level. The residual plots indicate 
+#that there are non-linear associations in the data, so other variables should be transformed to 
+#accommodate the improvements necessary for linearity.
+
