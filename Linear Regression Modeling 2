@@ -1,0 +1,106 @@
+
+# Orion Darley
+# Exercise 15 (ISLR Section 3.7)
+# This exercise explores contemporary exploratory data analysis, model fitting and comparison. 
+
+# Load packages
+rm(list=ls())
+
+library(class)
+library(corrplot)
+library(dplyr)
+library(forecast)
+library(RCurl)
+library(ISLR)
+library(ggplot2)
+library(leaps)
+library(gridExtra)
+library(MASS)
+
+#############################################################################
+# Exercise 15 (ISLR Section 3.7)
+#############################################################################
+#15. This problem involves the Boston data set, which we saw in the lab for this chapter. 
+#We will now try to predict per capita crime rate using the other variables in this data set. 
+#In other words, per capita crime rate is the response, and the other variables are the predictors.
+
+data(Boston)
+head(Boston)
+boston = Boston
+str(boston)
+summary(boston)
+
+boston$chas = factor(boston$chas)
+levels(boston$chas) = c("Otherwise", "Tract Bounds River")
+table(boston$chas)
+
+boston$rad = factor(boston$rad)
+table(boston$rad)
+
+
+#(a) For each predictor, fit a simple linear regression model to predict the response. 
+#Describe your results. In which of the models is there a statistically significant association 
+#between the predictor and the response? Create some plots to back up your assertions.
+
+summary(lm(crim ~ zn, data = boston)); summary(lm(crim ~ indus, data = boston)) 
+summary(lm(crim ~ chas, data = boston)); summary(lm(crim ~ nox, data = boston)) 
+summary(lm(crim ~ rm, data = boston)); summary(lm(crim ~ age, data = boston)) 
+summary(lm(crim ~ dis, data = boston)); summary(lm(crim ~ rad, data = boston)) 
+summary(lm(crim ~ tax, data = boston)); summary(lm(crim ~ ptratio, data = boston))  
+summary(lm(crim ~ black, data = boston)); summary(lm(crim ~ lstat, data = boston))  
+summary(lm(crim ~ medv, data = boston))
+
+log1 = log(boston[,2:3]+1); log2 = log(boston[,5:8]+1); log3 = log(boston[,10:14]+1)
+logmerge = merge(log1, log2); boston.log = merge(logmerge, log3)
+
+p1 = ggplot(boston, aes(y = crim, x = black))
+p1 + geom_point(color = "red") + geom_smooth(method = "lm", se = TRUE,color = "blue") + ggtitle("Plot") 
+#+ theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+#(b) Fit a multiple regression model to predict the response using all of the predictors. 
+#Describe your results. For which predictors can we reject the null hypothesis H0 : ??j = 0?
+
+lm.fit7 = lm(crim ~  ., data = boston); summary(lm.fit7)
+
+#(c) How do your results from (a) compare to your results from (b)? 
+#Create a plot displaying the univariate regression coefficients from (a) on the x-axis, 
+#and the multiple regression coefficients from (b) on the y-axis. That is, each predictor 
+#is displayed as a single point in the plot. Its coefficient in a simple linear regression model 
+#is shown on the x-axis, and its coefficient estimate in the multiple linear regression model is shown on the y-axis.
+
+coef = lm(crim ~ zn, data = boston)$coefficients[2]
+coef = append(coef, lm(crim ~ indus, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ chas, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ nox, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ rm, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ age, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ dis, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ rad, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ tax, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ ptratio, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ black, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ lstat, data = boston)$coefficients[2])
+coef = append(coef, lm(crim ~ medv, data = boston)$coefficients[2])
+full.boston = (lm(crim ~ . -crim, data = boston))
+full.boston$coefficients[2:14]
+
+plot(coef, full.boston$coefficients[2:14], main = "MLR Coefficients vs SLR Coefficients", 
+     xlab = "SLR Coefficients", ylab = "MLR Coefficients", xlim = c(-3,3), ylim = c(-3,3), col = "steelblue3", pch=16,cex=2.0)
+grid()
+
+#(d) Is there evidence of non-linear association between any of the predictors and the response? 
+#To answer this question, for each predictor X, fit a model of the form Y = ??0 + ??1X + ??2X2 + ??3X3 + e.
+
+summary(lm(crim ~ zn + I(zn^2) + I(zn^3), data = boston))
+summary(lm(crim ~ indus + I(indus^2) + I(indus^3), data = boston))
+summary(lm(crim ~ chas + I(chas^2) + I(chas^3), data = boston))
+summary(lm(crim ~ nox + I(nox^2) + I(nox^3), data = boston))
+summary(lm(crim ~ rm + I(rm^2) + I(rm^3), data = boston))
+summary(lm(crim ~ age + I(age^2) + I(age^3), data = boston))
+summary(lm(crim ~ dis + I(dis^2) + I(dis^3), data = boston))
+summary(lm(crim ~ rad + I(rad^2) + I(rad^3), data = boston))
+summary(lm(crim ~ tax + I(tax^2) + I(tax^3), data = boston))
+summary(lm(crim ~ ptratio + I(ptratio^2) + I(ptratio^3), data = boston))
+summary(lm(crim ~ black + I(black^2) + I(black^3), data = boston))
+summary(lm(crim ~ lstat + I(lstat^2) + I(lstat^3), data = boston))
+summary(lm(crim ~ medv + I(medv^2) + I(medv^3), data = boston))
