@@ -1,7 +1,7 @@
 
 # Orion Darley
 # Exercise 11 (ISLR Section 4.7)
-# This exercise explores Linear Discriminate Analysis, Quadratic Discriminant Analysis, and KNN Regression 
+# This exercise explores Linear Discriminate Analysis, Quadratic Discriminant Analysis, and KNN Classification 
 
 # Load packages
 rm(list=ls())
