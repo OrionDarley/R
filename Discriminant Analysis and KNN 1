@@ -124,4 +124,4 @@ pred.knn7 = knn(train.knn1, test.knn1, auto.train$mpg01, k=8)
 table(pred.knn7, auto.test$mpg01)
 mean(pred.knn7 == auto.test$mpg01)
 
-#fin
+#fin 
