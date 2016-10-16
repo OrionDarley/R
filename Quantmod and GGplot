@@ -1,0 +1,39 @@
+library("ggplot2")
+library("zoo")
+library("quantmod")
+
+# Importing Data via Quantmod
+e1 = new.env()
+getSymbols("HPE", env = e1, src ="yahoo", from = as.Date("2015-11-01"),to = as.Date("2016-10-14"))
+HPE = e1$HPE
+HPE.df = data.frame(date=time(HPE), coredata(HPE))
+
+e2 = new.env()
+getSymbols("HPQ", env = e2, src ="yahoo", from = as.Date("2015-11-01"),to = as.Date("2016-10-14"))
+HPQ = e2$HPQ
+HPQ.df = data.frame(date=time(HPQ), coredata(HPQ))
+
+# Verify the lengths
+length(HPE.df) == length(HPQ.df)
+
+# Build the dataframe with dates and stock prices to be used in graphing
+df1 = data.frame(Date = HPE.df$date,
+                HPE = HPE.df$HPE.Adjusted,
+                HPQ = HPQ.df$HPQ.Adjusted)
+
+# Plot prices over time
+ggplot(data = df1, aes(x = Date)) + geom_line(aes(y = HPE), colour = "seagreen3", size = 0.8) +
+  geom_line(aes(y = HPQ), colour = "royalblue4", size = 0.8) + ggtitle("HPE and HPQ Stock Prices \n Nov '15 - Oct '16") + labs(y = "HPE and HPQ") +
+  theme(plot.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=14, hjust=0)) +
+  theme(axis.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=12)) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Sumamry of the SLR
+fit <-lm(df1$HPQ ~ df1$HPE); summary(fit)
+
+# Plot the intercept and slope of the SLR
+p = ggplot(data = df1[2:3], aes(x = HPE, y = HPQ)) + geom_point() + geom_smooth( method = "lm", se = FALSE) + 
+  ggtitle("HPE and HPQ Stock Prices \n Nov '15 - Oct '16") + annotate("text", label="r^2=0.74", x = 21.5, y = 12.5) +
+  theme(plot.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=14, hjust=0)) +
+  theme(axis.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=12)) +
+  theme(plot.title = element_text(hjust = 0.5)); plot(p)
