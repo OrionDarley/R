@@ -132,4 +132,4 @@ m5
 tsdiag(m5,gof=24) 
 adf.test(rtn, alternative = "stationary")
 
-#fin 
+#fin
