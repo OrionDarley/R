@@ -1,0 +1,61 @@
+#Illustrative of rational and impractical theta parameters for autoregressive time series modeling. 
+#Autoregressive forecasting weighs past values of variables through linear combinations. 
+
+
+y <- ts(numeric(100))
+
+e <- rnorm(100)
+
+for(i in 2:100)
+  
+  y[i] <- 0.6*y[i-1] + e[i]
+
+###
+
+y2 <- ts(numeric(100))
+
+e2 <- rnorm(100)
+
+for(i in 2:100)
+  
+  y2[i] <- 1*y2[i-1] + e2[i]
+
+par(mfrow=c(2,2))
+plot(y, col = "sienna1", main=paste("AR(1): Plot A ","\n -1 < ?? < 1"))
+plot(y2, col = "brown2", main=paste("AR(1): Plot B ","\n ?? = 1"))
+
+#####################
+#Good description of the theta term
+#####################
+
+library(grDevices)
+par(mfrow=c(1,1))
+y <- ts(numeric(100))
+e <- rnorm(100)
+theta <- 0.6
+sd <- 1
+for(i in 2:100) y[i] <- theta*y[i-sd] + e[i]
+plot(y, ylim = c(-10,10))
+grid(NULL, NULL, col="black")
+
+#Now let's run theta from 0.1 to 2.0 at small intervals to see what happens:
+
+thetas<-seq(0.1,2.0,by=0.5)
+colors<-rainbow(length(thetas))
+for(j in length(thetas):1){
+  theta <- thetas[j]
+  for(i in 2:100) y[i] <- theta*y[i-1] + e[i]
+  lines(y, col = colors[j])
+}
+
+#The final picture with all values between 0.1 and 2.0 incremented by 0.1:
+
+thetas<-seq(0.1,2.0,by=0.1)
+colors<-rainbow(length(thetas))
+for(j in length(thetas):1){
+  theta <- thetas[j]
+  for(i in 2:100) y[i] <- theta*y[i-1] + e[i]
+  lines(y, col = colors[j])
+}
+
+legend(-1, 10, legend=thetas, fill = colors, col = colors, horiz=T)
