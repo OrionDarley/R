@@ -22,18 +22,18 @@ df1 = data.frame(Date = HPE.df$date,
                 HPQ = HPQ.df$HPQ.Adjusted)
 
 # Plot prices over time
-ggplot(data = df1, aes(x = Date)) + geom_line(aes(y = HPE), colour = "seagreen3", size = 0.8) +
+p1 = ggplot(data = df1, aes(x = Date)) + geom_line(aes(y = HPE), colour = "seagreen3", size = 0.8) +
   geom_line(aes(y = HPQ), colour = "royalblue4", size = 0.8) + ggtitle("HPE and HPQ Stock Prices \n Nov '15 - Oct '16") + labs(y = "HPE and HPQ") +
   theme(plot.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=14, hjust=0)) +
   theme(axis.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=12)) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)); plot(p1)
 
 # Sumamry of the SLR
 fit <-lm(df1$HPQ ~ df1$HPE); summary(fit)
 
 # Plot the intercept and slope of the SLR
-p = ggplot(data = df1[2:3], aes(x = HPE, y = HPQ)) + geom_point() + geom_smooth( method = "lm", se = FALSE) + 
+p2 = ggplot(data = df1[2:3], aes(x = HPE, y = HPQ)) + geom_point() + geom_smooth( method = "lm", se = FALSE) + 
   ggtitle("HPE and HPQ Stock Prices \n Nov '15 - Oct '16") + annotate("text", label="r^2=0.74", x = 21.5, y = 12.5) +
   theme(plot.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=14, hjust=0)) +
   theme(axis.title = element_text(family = "Trebuchet MS", color="#000000", face="bold", size=12)) +
-  theme(plot.title = element_text(hjust = 0.5)); plot(p)
+  theme(plot.title = element_text(hjust = 0.5)); plot(p2)
