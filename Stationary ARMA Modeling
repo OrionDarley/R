@@ -1,0 +1,135 @@
+
+setwd("C:/Users/")
+unemploy=read.table("m-unempmean.txt",header=T)
+library(fBasics)
+library(fpp)
+library(fUnitRoots)
+library(forecast)
+library(tseries)
+library(backtest)
+
+head(unemploy)
+basicStats(unemploy)
+
+#1. Unemployment rate is an important macroeconomic series. 
+#Equivalent importance is the duration of unemployment. Consider the mean duration of 
+#unemployment is the U.S. from January 1948 to March 2014. The duration is measured in weeks. 
+#The data are available from FRED of the Federal Reserve Bank of St Louis 
+#and also in the file m-unempmean.txt. The data were seasonally adjusted.
+
+#(a) Does the mean duration series have a unit root? Why?
+
+tdx=unemploy[,1]+unemploy[,2]/12
+dur=unemploy$Value
+
+plot(tdx,dur,type='l',xlab='Year',ylab='Duration',
+     main='Mean Duration of Unemployment', col = "steelblue2")
+
+#ts.unemploy <- ts(unemploy, start = c(1948,1), frequency = 12) # do no use, because data already has dates
+
+par(mfrow=c(1,1))
+plot(acf(dur), col = "sienna1", lwd = 2)
+plot(pacf(dur), col = "sienna1", lwd = 2)
+
+plot(acf(diff(dur)), col = "brown2", lwd = 2)
+plot(pacf(diff(dur)), col = "brown2", lwd = 2)
+
+m1=ar(diff(dur),method="mle")
+m1$order
+
+adf.test(dur, alternative = "stationary")
+
+#(b) Focus on the change series of duration, i.e. the first differenced series. 
+#Denote the change series by rt and let E(rt) = µ. Test H0 : µ = 0 versus the alternative Ha : µ != 0. Draw the conclusion.
+
+ddur=diff(dur)
+t.test(ddur) 
+
+#(c) Build an AR model for rt series. Perform model checking using gof = 24. Is the model adequate? Why?
+
+m2=arima(ddur,order=c(12,0,0),include.mean=F)
+m2
+
+tsdiag(m2,gof=24)
+
+Box.test(ddur,lag=24,type='Ljung')
+acf(m2$residuals, 25)
+pacf(m2$residuals, 25)
+
+#(d) Write down the fitted AR model.
+
+#(1 + 0.1351(xt-1) + 0.1134(xt-2) + 0.1083(xt-3) + 0.1165(xt-4) + 0.0738(xt-5)
+#+ 0.0770(xt-6) + 0.0903(xt-7) - 0.0609(xt-8) + 0.0687(xt-9) + 0.0609(xt-10)  + 0.0228(xt-11) - 0.0723(xt-12) = at
+
+#(e) Fit a seasonal model for the rt series using the command
+
+ms=arima(ddur,order=c(2,0,1),seasonal=list(order=c(1,0,1),period=12),include.mean=F)
+ms
+
+acf(ms$residuals, 25)
+pacf(ms$residuals, 25)
+
+Box.test(residuals(ms), lag = 12, fitdf = 5, type = "Ljung")
+Box.test(residuals(ms), lag = 12, fitdf = 5, type = "Ljung")
+
+#Perform model checking using gof = 24. Is the seasonal model adequate? Why?
+
+tsdiag(ms,gof=24)
+
+#(f) Based on the in-sample fitting, which model is preferred? Why?
+
+#(g) Consider out-of-sample predictions. Use t = 750 as the starting forecast origin. 
+#Which model is preferred based on the out-of-sample predictions?
+
+dim(unemploy)
+
+backtest(m2,ddur,750,1,inc.mean=F)
+backtest(ms,ddur,750,1,inc.mean=F)
+
+#2. (Commodity prices). Consider the weekly crude oil prices: West Texas Intermediate 
+#(WTI), Cushing, Oklahoma. The data are also available from FRED and in the file w-coilwtico.txt. 
+#The sample period is from January 3, 1986 to April 2, 2014.
+
+basicStats(oil)
+
+oil=read.table("w-coilwtico.txt",header=T)
+head(oil); dim(oil)
+basicStats(oil)
+tdx=c(1:1474)/52+1986
+coil=da$Value
+plot(tdx,coil,xlab='yeay',ylab='price',type='l',main=paste("WTI: Weekly Crude Oil Prices",
+    "\nJanuary 3, 1986 to April 2, 2014"), col = 'steelblue')
+
+#(a) Let rt be the growth series, i.e. the first difference of log oil prices. 
+#Is there serial correlation in the rt series? You may use Q(10) to draw the conclusion.
+
+par(mfcol = c(3, 1))
+acf(coil)
+acf(diff(coil))
+acf(diff(log(coil)))
+par(mfcol = c(1, 1))
+
+rtn = diff(log(coil))
+t.test(rtn)
+
+Box.test(rtn,lag=10,type='Ljung')
+
+#(b) Build an AR model for rt. Check the adequacy of the model, and write down the model.
+
+ts.coil <- ts(coil, start = c(1986,1), end = c(2014,4), frequency = 12)
+plot(diff(ts.coil))
+plot(diff(diff(ts.coil)))
+
+ma <- auto.arima(rtn, trace = TRUE, stationary = TRUE); ma
+tsdiag(ma,gof=24) 
+adf.test(rtn, alternative = "stationary")
+
+#(c) Fit another model to rt using the following command
+
+m5=arima(rt,order=c(3,0,2),include.mean=F)
+m5
+
+tsdiag(m5,gof=24) 
+adf.test(rtn, alternative = "stationary")
+
+#fin
