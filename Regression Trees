@@ -1,3 +1,4 @@
+
 # Orion Darley
 
 # Clear global environment
@@ -27,7 +28,7 @@ library(randomForest)
 #seek to predict Sales using regression trees and related approaches,
 #treating the response as a quantitative variable.
 
-set.seed(1)
+set.seed(9999)
 
 #(a) Split the data set into a training set and a test set.
 
@@ -49,7 +50,7 @@ text(tree.carseats, pretty = 0)
 #to make predictions against the test set
 yhat = predict(tree.carseats, newdata = Carseats[-train,])
 plot(yhat,carseats.test); abline(0,1)
-mean((yhat - carseats.test)^2) #MSE ≈ 5.8; sqrt(5.884527)
+mean((yhat - carseats.test)^2) #MSE ??? 5.8; sqrt(5.884527)
 
 ################################################
 #Rpart.plot
@@ -80,7 +81,7 @@ plot(prun.carseats.9); text(prun.carseats.9, pretty = 0)
 bag.carseats = randomForest(Sales~., data = Carseats, subset = train, mtry=5, ntree=25, importance=T)
 yhat.bag = predict(bag.carseats, Carseats[-train,])
 importance(bag.carseats)
-varImpPlot(bag.carseats, col = "blue",pch=16,cex=1)
+varImpPlot(bag.carseats, col = "blue",pch=16,cex=1) #try ,type = 2
 mean((yhat.bag - carseats.test)^2) #3.202519
 
 #(e) Use random forests to analyze this data. What test MSE do you
@@ -102,10 +103,17 @@ mean((yhat.rf - carseats.test)^2) #3.158899
 
 #9. This problem involves the OJ data set which is part of the ISLR
 #package.
+
+set.seed(9999)
+data(OJ)
+summary(OJ)
+
 #(a) Create a training set containing a random sample of 800 observations,
 #and a test set containing the remaining observations.
 
-
+train = sample(dim(OJ)[1], 800)
+oj.train = OJ[train,]
+oj.test = OJ[-train,]
 
 #(b) Fit a tree to the training data, with Purchase as the response
 #and the other variables as predictors. Use the summary() function
@@ -113,50 +121,59 @@ mean((yhat.rf - carseats.test)^2) #3.158899
 #results obtained. What is the training error rate? How many
 #terminal nodes does the tree have?
 
-
+tree.oj = tree(Purchase ~ ., data = oj.train)
+summary(tree.oj)
 
 #(c) Type in the name of the tree object in order to get a detailed
 #text output. Pick one of the terminal nodes, and interpret the
 #information displayed.
 
-
+tree.oj
 
 #(d) Create a plot of the tree, and interpret the results.
 
-
+plot(tree.oj)
+text(tree.oj, pretty = 0)
 
 #(e) Predict the response on the test data, and produce a confusion
 #matrix comparing the test labels to the predicted test labels.
 #What is the test error rate?
 
-
+tree.pred.oj = predict(tree.oj, oj.test, type= "class")
+table(tree.pred.oj, oj.test$Purchase)
+tree.error = 1 - ((120 + 92) / 270); tree.error #error rate 
 
 #(f) Apply the cv.tree() function to the training set in order to
 #determine the optimal tree size.
 
-
+cv.oj = cv.tree(tree.oj); cv.oj
 
 #(g) Produce a plot with tree size on the x-axis and cross-validated
 #classification error rate on the y-axis.
 
-
+plot(cv.oj$size, cv.oj$dev, type = 'b', main = paste("Tree Pruning on the OJ Cross-Validation Dataset"), 
+     col = "steelblue4", lwd = 2, xlab = "Size", ylab = "Dev")
 
 #(h) Which tree size corresponds to the lowest cross-validated classification
 #error rate?
 
-
+pruned.oj = prune.tree(tree.oj, best=6); summary(pruned.oj)
 
 #(i) Produce a pruned tree corresponding to the optimal tree size
 #obtained using cross-validation. If cross-validation does not lead
 #to selection of a pruned tree, then create a pruned tree with five
 #terminal nodes.
 
-
-
 #(j) Compare the training error rates between the pruned and unpruned
 #trees. Which is higher?
 
-
-
 #(k) Compare the test error rates between the pruned and unpruned
 #trees. Which is higher?
+
+unpruned.pred.oj = predict(tree.oj, oj.test, type = "class")
+unpruned = sum(oj.test$Purchase != unpruned.pred.oj)
+unpruned / length(unpruned.pred.oj)
+
+pruned.pred.oj = predict(pruned.oj, oj.test, type = "class")
+pruned = sum(oj.test$Purchase != pruned.pred.oj)
+pruned / length(unpruned.pred.oj)
